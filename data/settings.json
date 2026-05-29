@@ -1,0 +1,9 @@
+{
+  "aditya@example.com": {
+    "name": "Aditya Pandey P",
+    "company": "Plugin Corp",
+    "openaiApiKey": "sk-proj-test12345678",
+    "webhookUrl": "https://api.plugin.com/webhook",
+    "defaultUrl": "https://plugin.com"
+  }
+}

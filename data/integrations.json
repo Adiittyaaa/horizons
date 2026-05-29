@@ -1,0 +1,14 @@
+{
+  "guest@horizons.ai": {
+    "HubSpot": {
+      "connected": false,
+      "connectedAt": null,
+      "lastSync": "Never"
+    },
+    "Slack": {
+      "connected": false,
+      "connectedAt": null,
+      "lastSync": "Never"
+    }
+  }
+}
