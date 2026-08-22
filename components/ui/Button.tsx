@@ -19,7 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
   ariaLabel,
 }) => {
   const baseClasses =
-    'px-6 py-3 font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500';
+    'px-6 py-3 font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500';
   const variantClasses =
     variant === 'primary'
       ? 'bg-indigo-600 text-white hover:bg-indigo-700'

@@ -1,26 +1,45 @@
 // Horizons constants
+//
+// PERSONAS is the single source of truth for the four behavioral agents.
+// Every surface (progress screen, persona-insights routes, report page, and the
+// OpenAI analysis in lib/ai-agents.ts) must derive its persona list from here so
+// the product never contradicts itself about who is auditing the site.
 export const PERSONAS = [
   {
+    id: 'skeptical-buyer',
     name: 'Skeptical Buyer',
     icon: '🤨',
+    color: '#f87171',
+    tagline: 'Questions credibility and demands proof before trusting.',
     prompt: 'You are a skeptical buyer who questions credibility, looks for trust signals, and needs proof before purchasing.'
   },
   {
-    name: 'Impatient Mobile User',
-    icon: '📱',
-    prompt: 'You are an impatient mobile user who hates slow loading, hard-to-read text, and complicated navigation.'
-  },
-  {
-    name: 'First-Time Visitor',
-    icon: '👋',
-    prompt: 'You are visiting this website for the first time. You need clarity, simplicity, and immediate understanding of what this site offers.'
-  },
-  {
-    name: 'Price-Sensitive Customer',
+    id: 'value-seeker',
+    name: 'Value Seeker',
     icon: '💸',
-    prompt: 'You are price-conscious and need to see clear value, transparent pricing, and justification for costs.'
+    color: '#34d399',
+    tagline: 'Hunts for clear value and transparent, justified pricing.',
+    prompt: 'You are a price-conscious value seeker who needs to see clear value, transparent pricing, and justification for costs before committing.'
+  },
+  {
+    id: 'impulse-evaluator',
+    name: 'Impulse Evaluator',
+    icon: '⚡',
+    color: '#fbbf24',
+    tagline: 'Impatient and mobile-first; judges within seconds and bounces fast.',
+    prompt: 'You are an impatient, mobile-first visitor who bounces quickly when pages are slow, cluttered, or hard to scan. You form a judgment within seconds.'
+  },
+  {
+    id: 'enterprise-evaluator',
+    name: 'Enterprise Evaluator',
+    icon: '🏢',
+    color: '#a78bfa',
+    tagline: 'Vets security, compliance, integrations, and ability to scale.',
+    prompt: 'You are an enterprise evaluator who vets vendors for security, compliance (SOC2 / ISO 27001), integrations, and the ability to scale to a large organization.'
   }
 ] as const;
+
+export type Persona = (typeof PERSONAS)[number];
 
 export const PERFORMANCE_THRESHOLDS = {
   SLOW_LOAD_CRITICAL: 3000,

@@ -8,22 +8,24 @@ export default function EnterpriseEvaluatorPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handlePersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (value === 'Value Seeker') {
-      router.push('/persona-insights/value-seeker');
-    } else if (value === 'Enterprise Evaluator') {
-      router.push('/persona-insights/enterprise-evaluator');
-    } else {
-      router.push('/persona-insights');
-    }
+  const PERSONA_ROUTES: Record<string, string> = {
+    'Skeptical Buyer': '/persona-insights/skeptical-buyer',
+    'Value Seeker': '/persona-insights/value-seeker',
+    'Impulse Evaluator': '/persona-insights/impulse-evaluator',
+    'Enterprise Evaluator': '/persona-insights/enterprise-evaluator',
   };
 
-  const currentPersona = pathname.includes('value-seeker') 
-    ? 'Value Seeker' 
-    : pathname.includes('enterprise-evaluator') 
-      ? 'Enterprise Evaluator' 
-      : 'Skeptical Buyer';
+  const handlePersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    router.push(PERSONA_ROUTES[e.target.value] ?? '/persona-insights');
+  };
+
+  const currentPersona = pathname.includes('value-seeker')
+    ? 'Value Seeker'
+    : pathname.includes('impulse-evaluator')
+      ? 'Impulse Evaluator'
+      : pathname.includes('enterprise-evaluator')
+        ? 'Enterprise Evaluator'
+        : 'Skeptical Buyer';
 
   return (
     <div className="bg-background text-on-surface font-body-md antialiased min-h-screen flex flex-col">
@@ -51,6 +53,7 @@ export default function EnterpriseEvaluatorPage() {
                   >
                     <option value="Skeptical Buyer">Skeptical Buyer</option>
                     <option value="Value Seeker">Value Seeker</option>
+                    <option value="Impulse Evaluator">Impulse Evaluator</option>
                     <option value="Enterprise Evaluator">Enterprise Evaluator</option>
                   </select>
                   <span className="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>

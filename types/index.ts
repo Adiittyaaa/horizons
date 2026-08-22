@@ -53,4 +53,6 @@ export interface ScanReport {
     max: number;
   };
   isPaid: boolean;
+  /** True when the report was synthesized (no OPENAI_API_KEY, or the live crawl/AI failed). */
+  demoMode?: boolean;
 }

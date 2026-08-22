@@ -12,6 +12,8 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -22,8 +24,15 @@ export default function Register() {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    // Mock registration grants Pro access for this demo
-    login(email);
+    setSubmitting(true);
+    // Mock registration signs the user in; carry the entered name through.
+    login(email, name ? { name } : undefined);
+    router.push('/dashboard');
+  };
+
+  const handleDemo = () => {
+    setSubmitting(true);
+    login('demo@horizons.ai', { isPro: true, name: 'Demo User', company: 'Horizons Demo' });
     router.push('/dashboard');
   };
   return (
@@ -48,6 +57,23 @@ export default function Register() {
               <h1 className="font-display-md text-display-md text-primary tracking-tight mb-2">Start Your Analysis</h1>
               <p className="font-body-md text-body-md text-on-surface-variant">Join 2,800+ teams optimizing their conversion funnels.</p>
             </header>
+
+            <button
+              type="button"
+              onClick={handleDemo}
+              disabled={submitting}
+              className="w-full mb-lg flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-secondary/40 bg-secondary/5 text-secondary font-bold hover:bg-secondary/10 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-wait group/demo"
+            >
+              <span className="material-symbols-outlined text-[20px] group-hover/demo:scale-110 transition-transform">bolt</span>
+              Skip signup — explore the demo
+              <span className="font-label-mono text-[10px] uppercase tracking-widest bg-secondary text-on-primary px-1.5 py-0.5 rounded-full">Pro</span>
+            </button>
+
+            <div className="relative pb-lg flex items-center gap-4">
+              <div className="flex-1 h-px bg-outline-variant"></div>
+              <span className="font-label-mono text-[10px] text-on-surface-variant uppercase">Or create an account</span>
+              <div className="flex-1 h-px bg-outline-variant"></div>
+            </div>
 
             <form className="space-y-lg" onSubmit={handleRegister}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-lg">
@@ -77,14 +103,19 @@ export default function Register() {
 
               <div className="space-y-sm">
                 <label className="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-widest">Password</label>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Create a strong password" 
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-2xl px-6 py-4 font-body-md text-on-surface focus:outline-none focus:border-secondary transition-all" 
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Create a strong password"
+                    className="w-full bg-surface-container-low border border-outline-variant rounded-2xl px-6 pr-12 py-4 font-body-md text-on-surface focus:outline-none focus:border-secondary transition-all"
+                    required
+                  />
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors">
+                    <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-start gap-3">
@@ -95,9 +126,18 @@ export default function Register() {
               </div>
 
               <div className="pt-md">
-                <button type="submit" className="w-full bg-primary text-on-primary py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all shadow-xl">
-                  Create Account
-                  <span className="material-symbols-outlined text-[20px]">person_add</span>
+                <button type="submit" disabled={submitting} className="w-full bg-primary text-on-primary py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all shadow-xl disabled:opacity-70 disabled:cursor-wait disabled:hover:scale-100">
+                  {submitting ? (
+                    <>
+                      Creating account
+                      <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+                    </>
+                  ) : (
+                    <>
+                      Create Account
+                      <span className="material-symbols-outlined text-[20px]">person_add</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

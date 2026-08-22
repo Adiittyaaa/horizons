@@ -10,6 +10,10 @@
 /.next/
 /out/
 
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
 # production
 /build
 
@@ -29,3 +33,4 @@ yarn-error.log*
 
 # OS files
 .DS_Store
+.vercel

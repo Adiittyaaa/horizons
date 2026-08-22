@@ -8,7 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function SettingsPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, updateProfile } = useAuth();
   const router = useRouter();
 
   // Settings State
@@ -44,12 +44,17 @@ export default function SettingsPage() {
         const res = await fetch(`/api/settings?email=${encodeURIComponent(user.email)}`);
         if (res.ok) {
           const data = await res.json();
-          setName(data.name || '');
-          setCompany(data.company || '');
+          // Fall back to the session profile when the (serverless) settings
+          // store has nothing yet, so the fields aren't blank on first visit.
+          setName(data.name || user.name || '');
+          setCompany(data.company || user.company || '');
           setOpenaiApiKey(data.openaiApiKey || '');
           setWebhookUrl(data.webhookUrl || '');
           setDefaultUrl(data.defaultUrl || '');
         } else {
+          // API unavailable — still seed from the local session so the form is usable.
+          setName(user.name || '');
+          setCompany(user.company || '');
           console.error('Failed to load settings');
         }
       } catch (error) {
@@ -68,6 +73,10 @@ export default function SettingsPage() {
 
     setIsSaving(true);
     setStatus({ type: null, text: '' });
+
+    // Persist to the session first — instant, reliable, and survives even when
+    // the serverless settings file store doesn't. The Navbar/profile update at once.
+    updateProfile({ name, company });
 
     try {
       const res = await fetch('/api/settings', {
@@ -91,12 +100,14 @@ export default function SettingsPage() {
           setStatus({ type: null, text: '' });
         }, 4000);
       } else {
-        const err = await res.json();
-        setStatus({ type: 'error', text: err.error || 'Failed to save configuration.' });
+        // The local profile is already saved; only the server sync failed.
+        setStatus({ type: 'success', text: 'Profile saved locally. Server sync unavailable.' });
+        setTimeout(() => setStatus({ type: null, text: '' }), 4000);
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      setStatus({ type: 'error', text: 'A network error occurred. Please try again.' });
+      setStatus({ type: 'success', text: 'Profile saved locally. Server sync unavailable.' });
+      setTimeout(() => setStatus({ type: null, text: '' }), 4000);
     } finally {
       setIsSaving(false);
     }

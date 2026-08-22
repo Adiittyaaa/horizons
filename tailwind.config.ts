@@ -59,9 +59,15 @@ const config: Config = {
         "surface": "#f8f9ff"
       },
       borderRadius: {
-        "DEFAULT": "0.25rem",
-        "lg": "0.5rem",
-        "xl": "0.75rem",
+        "none": "0px",
+        "xs": "0px",
+        "sm": "0px",
+        "DEFAULT": "0px",
+        "md": "0px",
+        "lg": "0px",
+        "xl": "0px",
+        "2xl": "0px",
+        "3xl": "0px",
         "full": "9999px"
       },
       spacing: {
@@ -75,11 +81,11 @@ const config: Config = {
         "gutter": "24px"
       },
       fontFamily: {
-        "headline-md": ["Inter", "sans-serif"],
-        "display-xl": ["Inter", "sans-serif"],
+        "headline-md": ["Newsreader", "serif"],
+        "display-xl": ["Newsreader", "serif"],
         "body-lg": ["Inter", "sans-serif"],
-        "headline-lg": ["Inter", "sans-serif"],
-        "label-mono": ["Work Sans", "sans-serif"],
+        "headline-lg": ["Newsreader", "serif"],
+        "label-mono": ["Inter", "sans-serif"],
         "body-md": ["Inter", "sans-serif"],
         "body-sm": ["Inter", "sans-serif"]
       },

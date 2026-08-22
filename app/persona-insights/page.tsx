@@ -29,6 +29,16 @@ export default function PersonaInsightsOverview() {
       color: "secondary"
     },
     {
+      id: "impulse-evaluator",
+      emoji: "⚡",
+      name: "Impulse Evaluator",
+      tagline: "The Five-Second Decider",
+      description: "A fast, visually-driven visitor who commits or bounces within seconds. Demands an obvious value prop and CTA above the fold.",
+      metrics: { impact: "High", complexity: "Low", recovery: "+$96k" },
+      traits: ["Fast Decisions", "Visually Driven", "Low Patience"],
+      color: "secondary"
+    },
+    {
       id: "enterprise-evaluator",
       emoji: "🏢",
       name: "Enterprise Evaluator",
