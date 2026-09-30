@@ -23,7 +23,7 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="py-24 px-gutter bg-surface-container-low/30 overflow-hidden border-t border-b border-outline-variant/30">
+    <section className="py-24 px-gutter bg-surface-container-low/30 overflow-hidden">
       <div className="max-w-container-max mx-auto">
         <div className="text-center mb-16">
           <h2 className="font-display-lg text-display-lg text-primary mb-4">Loved by Growth Teams</h2>
@@ -32,7 +32,7 @@ export default function Testimonials() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((t, i) => (
-            <div key={i} className="bg-surface-container-lowest p-10 rounded-none border border-outline-variant shadow-sm hover:ambient-shadow transition-all group flex flex-col justify-between">
+            <div key={i} className="bg-surface-container-lowest p-10 rounded-[3rem] border border-outline-variant shadow-sm hover:ambient-shadow transition-all group flex flex-col justify-between">
               <div className="mb-8">
                 <div className="flex gap-1 mb-6 text-secondary">
                   {[1,2,3,4,5].map(s => <span key={s} className="material-symbols-outlined text-sm">star</span>)}
@@ -40,7 +40,7 @@ export default function Testimonials() {
                 <p className="font-body-md text-on-surface leading-relaxed italic">"{t.quote}"</p>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-secondary text-on-secondary flex items-center justify-center font-bold rounded-none">
+                <div className="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold">
                   {t.avatar}
                 </div>
                 <div>

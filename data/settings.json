@@ -1,9 +1,11 @@
+mkdir -p ~/.claude
+[ -f ~/.claude/settings.json ] && cp ~/.claude/settings.json ~/.claude/settings.json.bak
+cat > ~/.claude/settings.json <<'EOF'
 {
-  "aditya@example.com": {
-    "name": "Aditya Pandey P",
-    "company": "Plugin Corp",
-    "openaiApiKey": "sk-proj-test12345678",
-    "webhookUrl": "https://api.plugin.com/webhook",
-    "defaultUrl": "https://plugin.com"
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.apmix.ai",
+    "ANTHROPIC_AUTH_TOKEN": "apx_live_jfrekb7mny9mTa22tBElMWe43PzvVNTKp1YoB2Sg",
+    "ANTHROPIC_MODEL": "claude-sonnet-5"
   }
 }
+EOF

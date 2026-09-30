@@ -1,14 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Dashboard() {
-  const router = useRouter();
   const { user, isLoading } = useAuth();
   const [logs, setLogs] = useState<string[]>([
     '> Initializing Swarm Protocol v4.2.0...',
@@ -16,16 +14,9 @@ export default function Dashboard() {
     '> Connection established with data layer...',
   ]);
 
-  // Redirect to login if not authenticated
+  // Simulation for live logs
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isLoading, router]);
-
-  // Simulation for live logs (only run for Pro users)
-  useEffect(() => {
-    if (isLoading || !user || !user.isPro) return;
+    if (isLoading) return;
     
     const possibleLogs = [
       '> Simulating checkout flow interaction...',
@@ -46,7 +37,7 @@ export default function Dashboard() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isLoading, user]);
+  }, [isLoading]);
 
   // Formatter for logs in live console output
   const formatLog = (log: string) => {
@@ -59,7 +50,7 @@ export default function Dashboard() {
         <div className="flex items-start gap-2">
           <span className="text-indigo-400 font-bold font-label-mono">&gt;</span>
           <span className="text-slate-300">{parts[0]}</span>
-          <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded-none text-[9px] font-bold uppercase tracking-wider border border-amber-500/30">
+          <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded text-[9px] font-bold uppercase tracking-wider border border-amber-500/30">
             CAUTION: {warningText}
           </span>
         </div>
@@ -71,7 +62,7 @@ export default function Dashboard() {
       return (
         <div className="flex items-start gap-2">
           <span className="text-indigo-400 font-bold font-label-mono">&gt;</span>
-          <span className="text-emerald-400 font-bold font-headline-md text-xs">Trust Auditor:</span>
+          <span className="text-emerald-400 font-bold">Trust Auditor:</span>
           <span className="text-slate-300">{parts[1]}</span>
         </div>
       );
@@ -86,7 +77,7 @@ export default function Dashboard() {
           <div className="flex items-start gap-2">
             <span className="text-indigo-400 font-bold font-label-mono">&gt;</span>
             <span className="text-slate-400">Persona</span>
-            <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-none text-[9px] font-bold border border-indigo-500/30">
+            <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded text-[9px] font-bold border border-indigo-500/30">
               {persona}
             </span>
             <span className="text-slate-300">{rest}</span>
@@ -100,7 +91,7 @@ export default function Dashboard() {
       return (
         <div className="flex items-start gap-2">
           <span className="text-indigo-400 font-bold font-label-mono">&gt;</span>
-          <span className="text-blue-400 font-bold font-headline-md text-xs">Swarm Agent</span>
+          <span className="text-blue-400 font-bold">Swarm Agent</span>
           <span className="text-slate-300">{parts[1]}</span>
         </div>
       );
@@ -111,7 +102,7 @@ export default function Dashboard() {
       return (
         <div className="flex items-start gap-2">
           <span className="text-indigo-400 font-bold font-label-mono">&gt;</span>
-          <span className="text-teal-400 font-bold font-headline-md text-xs">Revenue Impact Engine:</span>
+          <span className="text-teal-400 font-bold">Revenue Impact Engine:</span>
           <span className="text-slate-300">{parts[1]}</span>
         </div>
       );
@@ -127,7 +118,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
         <div className="relative">
           <div className="w-20 h-20 border-2 border-primary/20 rounded-full"></div>
           <div className="w-20 h-20 border-t-2 border-primary rounded-full animate-spin absolute top-0 left-0"></div>
@@ -139,12 +130,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  if (!user) {
-    return null; // Let the redirect trigger in useEffect
-  }
-
-  const isPro = user.isPro === true;
 
   return (
     <div className="bg-background text-on-background antialiased selection:bg-secondary selection:text-on-secondary min-h-screen flex flex-col">
@@ -163,14 +148,14 @@ export default function Dashboard() {
           {/* Header Metrics */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
             {/* Score Card */}
-            <div className="md:col-span-1 bg-surface-container-lowest border border-outline-variant/60 rounded-none p-6 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[320px]">
+            <div className="md:col-span-1 bg-surface-container-lowest border border-outline-variant/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[320px]">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
               <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-error/5 rounded-full blur-2xl group-hover:bg-error/10 transition-colors"></div>
 
               <div className="flex justify-between items-start relative z-10">
                 <div>
                   <h2 className="font-label-mono text-[10px] text-outline uppercase tracking-widest font-bold">Conversion Score</h2>
-                  <p className="text-xs text-on-surface-variant mt-0.5 font-sans">Overall rating</p>
+                  <p className="text-xs text-on-surface-variant mt-0.5">Overall rating</p>
                 </div>
                 <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors">speed</span>
               </div>
@@ -195,7 +180,7 @@ export default function Dashboard() {
                     strokeWidth="7"
                     strokeDasharray="251.2"
                     strokeDashoffset={251.2 - (251.2 * 72) / 100}
-                    strokeLinecap="square"
+                    strokeLinecap="round"
                     fill="transparent"
                     className="transition-all duration-1000 ease-out drop-shadow-[0_0_6px_rgba(99,102,241,0.4)]"
                   />
@@ -220,7 +205,7 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="flex items-center justify-center gap-2 mt-1">
-                  <div className="w-full px-3 py-1 bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-none text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border border-amber-500/20">
+                  <div className="w-full px-3 py-1 bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border border-amber-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
                     Needs Improvement
                   </div>
@@ -230,7 +215,7 @@ export default function Dashboard() {
 
             {/* Metrics */}
             <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-gutter">
-              <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-none p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between h-full relative overflow-hidden">
+              <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between h-full relative overflow-hidden">
                 <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-primary/5 rounded-full blur-xl group-hover:bg-primary/10 transition-colors"></div>
                 <div>
                   <div className="flex justify-between items-start mb-4">
@@ -238,12 +223,12 @@ export default function Dashboard() {
                       <h3 className="font-label-mono text-[10px] text-outline uppercase tracking-widest font-bold">Total Scans</h3>
                       <p className="text-xs text-on-surface-variant mt-0.5">Continuous analysis</p>
                     </div>
-                    <div className="w-8 h-8 bg-primary/5 rounded-none flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary group-hover:scale-110 transition-all duration-300">
+                    <div className="w-8 h-8 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary group-hover:scale-110 transition-all duration-300">
                       <span className="material-symbols-outlined text-sm">radar</span>
                     </div>
                   </div>
                   <div className="font-headline-lg text-4xl text-on-surface mb-2 tracking-tight">1,248</div>
-                  <div className="inline-flex font-body-sm text-[11px] text-emerald-600 dark:text-emerald-400 items-center gap-1 font-medium bg-emerald-500/10 px-2.5 py-0.5 rounded-none border border-emerald-500/20">
+                  <div className="inline-flex font-body-sm text-[11px] text-emerald-600 dark:text-emerald-400 items-center gap-1 font-medium bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                     <span className="material-symbols-outlined text-xs">trending_up</span>
                     +12% <span className="opacity-60 font-normal ml-1">vs last week</span>
                   </div>
@@ -270,11 +255,12 @@ export default function Dashboard() {
                       strokeLinecap="round"
                     />
                     <circle cx="100" cy="10" r="2" fill="#4f46e5" />
+                    <circle cx="100" cy="10" r="4" fill="#4f46e5" className="animate-ping opacity-75" />
                   </svg>
                 </div>
               </div>
 
-              <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-none p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between h-full relative overflow-hidden">
+              <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between h-full relative overflow-hidden">
                 <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-error/5 rounded-full blur-xl group-hover:bg-error/10 transition-colors"></div>
                 <div>
                   <div className="flex justify-between items-start mb-4">
@@ -282,12 +268,12 @@ export default function Dashboard() {
                       <h3 className="font-label-mono text-[10px] text-outline uppercase tracking-widest font-bold">Leaks Found</h3>
                       <p className="text-xs text-on-surface-variant mt-0.5">Critical vulnerabilities</p>
                     </div>
-                    <div className="w-8 h-8 bg-error/5 rounded-none flex items-center justify-center text-error group-hover:bg-error group-hover:text-on-error group-hover:scale-110 transition-all duration-300">
+                    <div className="w-8 h-8 rounded-xl bg-error/5 flex items-center justify-center text-error group-hover:bg-error group-hover:text-on-error group-hover:scale-110 transition-all duration-300">
                       <span className="material-symbols-outlined text-sm">warning</span>
                     </div>
                   </div>
                   <div className="font-headline-lg text-4xl text-on-surface mb-2 tracking-tight">24</div>
-                  <div className="inline-flex font-body-sm text-[11px] text-error items-center gap-1 font-medium bg-error/10 px-2.5 py-0.5 rounded-none border border-error/20">
+                  <div className="inline-flex font-body-sm text-[11px] text-error items-center gap-1 font-medium bg-error/10 px-2.5 py-0.5 rounded-full border border-error/20">
                     <span className="material-symbols-outlined text-xs">notification_important</span>
                     +3 <span className="opacity-60 font-normal ml-1">since yesterday</span>
                   </div>
@@ -314,13 +300,16 @@ export default function Dashboard() {
                       strokeLinecap="round"
                     />
                     <circle cx="100" cy="5" r="2" fill="#ba1a1a" />
+                    <circle cx="100" cy="5" r="4" fill="#ba1a1a" className="animate-ping opacity-75" />
                   </svg>
                 </div>
               </div>
 
               {/* Recovery Card */}
-              <div className="sm:col-span-2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white rounded-none p-6 shadow-2xl relative overflow-hidden group border border-slate-800">
+              <div className="sm:col-span-2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white rounded-3xl p-6 shadow-2xl relative overflow-hidden group border border-slate-800">
                 <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none"></div>
+                <div className="absolute -right-24 -top-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/15 transition-all duration-500"></div>
+                <div className="absolute -left-24 -bottom-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/15 transition-all duration-500"></div>
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
                   <div className="flex flex-col">
@@ -336,7 +325,7 @@ export default function Dashboard() {
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-none">
+                    <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl">
                       <span className="material-symbols-outlined text-emerald-400 text-lg">paid</span>
                       <div className="text-left">
                         <div className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Recouping rate</div>
@@ -344,7 +333,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     
-                    <button className="px-6 py-3.5 bg-white/10 hover:bg-white/15 active:scale-95 text-white backdrop-blur-md rounded-none border border-white/20 text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-indigo-500/10">
+                    <button className="px-6 py-3.5 bg-white/10 hover:bg-white/15 active:scale-95 text-white backdrop-blur-md rounded-2xl border border-white/20 text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-indigo-500/10">
                       <span className="material-symbols-outlined text-sm text-emerald-400">analytics</span>
                       Run Recovery Simulation
                     </button>
@@ -359,7 +348,7 @@ export default function Dashboard() {
             <div className="absolute -left-1/4 top-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
             
             <div className="flex items-center justify-between px-2">
-              <h2 className="font-headline-md text-2xl text-on-surface flex items-center gap-3 font-bold">
+              <h2 className="font-headline-md text-2xl text-on-surface flex items-center gap-3">
                 Live Swarm Activity
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -372,8 +361,8 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-none p-1 shadow-sm overflow-hidden group relative">
-              <div className="bg-white rounded-none p-6 border border-outline-variant/30 relative">
+            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-[2rem] p-1 shadow-sm overflow-hidden group">
+              <div className="bg-white rounded-[1.8rem] p-6 border border-outline-variant/30 relative">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 relative z-10">
                   {[
                     { agent: "Skeptical Analyst", status: "Active", icon: "search", progress: 65, color: "text-indigo-600 bg-indigo-50 border-indigo-100", barColor: "bg-indigo-500" },
@@ -381,9 +370,9 @@ export default function Dashboard() {
                     { agent: "Trust Auditor", status: "Checking", icon: "verified_user", progress: 88, color: "text-emerald-600 bg-emerald-50 border-emerald-100", barColor: "bg-emerald-500" },
                     { agent: "UX Specialist", status: "Optimizing", icon: "ads_click", progress: 15, color: "text-rose-600 bg-rose-50 border-rose-100", barColor: "bg-rose-500" }
                   ].map((a, i) => (
-                    <div key={i} className="p-4 bg-surface-container-lowest border border-outline-variant/50 rounded-none shadow-sm hover:border-outline transition-all duration-300 hover:shadow-sm group/card flex flex-col justify-between min-h-[140px]">
+                    <div key={i} className="p-4 bg-surface-container-lowest border border-outline-variant/50 rounded-2xl shadow-sm hover:border-outline transition-all duration-300 hover:shadow-sm group/card flex flex-col justify-between min-h-[140px]">
                       <div className="flex items-center justify-between mb-3">
-                        <div className={`w-8 h-8 rounded-none ${a.color} border flex items-center justify-center text-sm`}>
+                        <div className={`w-8 h-8 rounded-xl ${a.color} border flex items-center justify-center text-sm`}>
                           <span className="material-symbols-outlined text-sm">{a.icon}</span>
                         </div>
                         <div className="relative w-6 h-6 flex items-center justify-center">
@@ -409,13 +398,13 @@ export default function Dashboard() {
                 </div>
 
                 {/* Swarm Terminal Console */}
-                <div className="bg-slate-950 rounded-none font-label-mono text-[11px] text-slate-300 shadow-2xl relative overflow-hidden group/terminal border border-slate-800">
+                <div className="bg-slate-950 rounded-2xl font-label-mono text-[11px] text-slate-300 shadow-2xl relative overflow-hidden group/terminal border border-slate-800">
                   <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800/80">
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1.5">
-                        <div className="w-3 h-3 bg-rose-500/90 border border-rose-600/30"></div>
-                        <div className="w-3 h-3 bg-amber-500/90 border border-amber-600/30"></div>
-                        <div className="w-3 h-3 bg-emerald-500/90 border border-emerald-600/30"></div>
+                        <div className="w-3 h-3 rounded-full bg-rose-500/90 border border-rose-600/30"></div>
+                        <div className="w-3 h-3 rounded-full bg-amber-500/90 border border-amber-600/30"></div>
+                        <div className="w-3 h-3 rounded-full bg-emerald-500/90 border border-emerald-600/30"></div>
                       </div>
                       <span className="text-slate-400 text-[10px] tracking-wider font-bold ml-2">horizons-swarm:~</span>
                     </div>
@@ -425,64 +414,39 @@ export default function Dashboard() {
                     </div>
                   </div>
                   
-                  <div className="p-5 space-y-2.5 min-h-[140px] max-h-[220px] overflow-y-auto font-mono custom-scrollbar">
-                    {isPro ? (
-                      logs.map((log, i) => (
-                        <div key={i} className={`transition-all duration-300 ${i === logs.length - 1 ? 'opacity-100' : 'opacity-50'}`}>
-                          {formatLog(log)}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-slate-500 flex flex-col items-center justify-center py-6 gap-2">
-                        <span className="material-symbols-outlined text-lg">lock</span>
-                        <span>Upgrade to Pro to stream live simulation logs</span>
+                  <div className="p-5 space-y-2.5 min-h-[140px] max-h-[220px] overflow-y-auto font-mono scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                    {logs.map((log, i) => (
+                      <div key={i} className={`transition-all duration-300 ${i === logs.length - 1 ? 'opacity-100' : 'opacity-50'}`}>
+                        {formatLog(log)}
                       </div>
-                    )}
-                    {isPro && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-indigo-400 font-bold font-label-mono">&gt;</span>
-                        <span className="animate-pulse inline-block w-2.5 h-4 bg-indigo-400 translate-y-0.5"></span>
-                      </div>
-                    )}
+                    ))}
+                    <div className="flex items-center gap-2">
+                      <span className="text-indigo-400 font-bold font-label-mono">&gt;</span>
+                      <span className="animate-pulse inline-block w-2.5 h-4 bg-indigo-400 translate-y-0.5"></span>
+                    </div>
                   </div>
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none h-6"></div>
                 </div>
               </div>
-              
-              {/* Overlay for Free Tier */}
-              {!isPro && (
-                <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm z-20 flex items-center justify-center p-6 text-center transition-all duration-500">
-                  <div className="bg-white dark:bg-slate-950 border border-outline-variant p-6 rounded-none max-w-sm shadow-2xl relative overflow-hidden">
-                    <span className="material-symbols-outlined text-3xl text-secondary mb-3">lock</span>
-                    <h3 className="font-headline-md text-on-surface mb-2 font-bold">Lock Live Console</h3>
-                    <p className="text-[11px] text-on-surface-variant mb-4 leading-relaxed font-sans">
-                      Swarm agent debuggers are locked on the free tier. Purchase the Pro plan to view live diagnostic feeds.
-                    </p>
-                    <Link href="/checkout" className="inline-block px-6 py-2.5 bg-secondary hover:bg-secondary-container text-white rounded-none font-bold text-xs uppercase tracking-widest shadow-md">
-                      Upgrade to Pro
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
           </section>
 
           {/* Revenue Intelligence Forecast */}
-          <section className="bg-surface-container-lowest border border-outline-variant/60 rounded-none shadow-xl overflow-hidden relative group">
+          <section className="bg-surface-container-lowest border border-outline-variant/60 rounded-[2rem] shadow-xl overflow-hidden relative group">
             <div className="absolute -right-24 bottom-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl pointer-events-none"></div>
 
             <div className="p-6 border-b border-outline-variant/60 flex justify-between items-center bg-surface-container-low/20 backdrop-blur-md relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-none bg-secondary/10 flex items-center justify-center text-secondary">
+                <div className="w-10 h-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
                   <span className="material-symbols-outlined">query_stats</span>
                 </div>
                 <div>
-                  <h2 className="font-headline-sm text-on-surface font-bold">Revenue Intelligence</h2>
+                  <h2 className="font-headline-sm text-on-surface">Revenue Intelligence</h2>
                   <p className="text-[10px] font-label-mono text-outline uppercase tracking-widest font-bold">Projected Monthly Growth</p>
                 </div>
               </div>
               <div className="flex gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low border border-outline-variant/30 text-[10px] font-bold rounded-none text-on-surface">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low border border-outline-variant/30 text-[10px] font-bold rounded-full text-on-surface">
                   <span className="material-symbols-outlined text-xs text-secondary">calendar_today</span>
                   Next 30 Days
                 </div>
@@ -492,7 +456,7 @@ export default function Dashboard() {
             <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
               <div className="lg:col-span-7 flex flex-col justify-center">
                 <div className="mb-6">
-                  <div className="text-5xl font-extrabold text-on-surface tracking-tighter mb-2 font-headline-md">
+                  <div className="text-5xl font-extrabold text-on-surface tracking-tighter mb-2">
                     $12,450<span className="text-xl text-outline font-normal">.00</span>
                   </div>
                   <p className="font-body-sm text-sm text-on-surface-variant max-w-md leading-relaxed">
@@ -511,8 +475,8 @@ export default function Dashboard() {
                         <span className="text-on-surface-variant group-hover/item:text-on-surface transition-colors">{item.label}</span>
                         <span className="text-on-surface">{item.value}</span>
                       </div>
-                      <div className="w-full h-3 bg-surface-container-high rounded-none overflow-hidden p-0.5 border border-outline-variant/30">
-                        <div className={`${item.color} ${item.glow} h-full rounded-none group-hover/item:brightness-110 transition-all duration-700 relative`} style={{ width: item.width }}>
+                      <div className="w-full h-3 bg-surface-container-high rounded-full overflow-hidden p-0.5 border border-outline-variant/30">
+                        <div className={`${item.color} ${item.glow} h-full rounded-full group-hover/item:brightness-110 transition-all duration-700 relative`} style={{ width: item.width }}>
                           <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/40 blur-xs rounded-full"></div>
                         </div>
                       </div>
@@ -521,46 +485,46 @@ export default function Dashboard() {
                 </div>
               </div>
               
-              <div className="lg:col-span-5 bg-gradient-to-br from-indigo-50/40 via-white/55 to-emerald-50/20 dark:from-slate-900/40 dark:to-slate-800/20 border border-outline-variant/60 rounded-none p-6 flex flex-col items-center justify-center text-center group/card relative overflow-hidden shadow-inner backdrop-blur-sm min-h-[300px]">
+              <div className="lg:col-span-5 bg-gradient-to-br from-indigo-50/40 via-white/55 to-emerald-50/20 dark:from-slate-900/40 dark:to-slate-800/20 border border-outline-variant/60 rounded-3xl p-6 flex flex-col items-center justify-center text-center group/card relative overflow-hidden shadow-inner backdrop-blur-sm min-h-[300px]">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent animate-pulse"></div>
-                <div className="w-16 h-16 rounded-none bg-white dark:bg-slate-900 shadow-xl flex items-center justify-center mb-4 group-hover/card:scale-110 transition-transform duration-500 border border-outline-variant/20">
+                <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 shadow-xl flex items-center justify-center mb-4 group-hover/card:scale-110 transition-transform duration-500 border border-outline-variant/20">
                   <span className="material-symbols-outlined text-3xl text-indigo-500 animate-pulse">auto_awesome</span>
                 </div>
-                <h4 className="font-headline-sm text-on-surface mb-2 font-bold font-headline-md text-sm">AI Prediction Engine</h4>
+                <h4 className="font-headline-sm text-on-surface mb-2 font-bold">AI Prediction Engine</h4>
                 <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 mb-2">
                   +22.4%
                 </div>
-                <p className="font-body-sm text-on-surface-variant text-xs mb-6 px-4 leading-relaxed max-w-[260px] font-sans">
+                <p className="font-body-sm text-on-surface-variant text-xs mb-6 px-4 leading-relaxed max-w-[260px]">
                   Implementing proposed adjustments suggests an uplift of conversion rate on your checkout steps.
                 </p>
-                <Link href="/leaks" className="w-full py-3.5 bg-on-surface text-surface rounded-none font-bold text-xs hover:opacity-95 transition-all shadow-lg flex items-center justify-center gap-3 group/btn relative overflow-hidden uppercase tracking-wider border border-on-surface">
+                <Link href="/leaks" className="w-full py-3.5 bg-on-surface text-surface rounded-2xl font-bold text-xs hover:opacity-95 transition-all shadow-lg flex items-center justify-center gap-3 group/btn relative overflow-hidden uppercase tracking-wider">
                   <span className="relative z-10">View Implementation Guide</span>
                   <span className="material-symbols-outlined text-sm relative z-10 group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
                 </Link>
                 <div className="flex gap-4 mt-4">
-                  <Link href="/reports" className="px-6 py-3 bg-primary text-on-primary rounded-none font-bold text-xs hover:bg-primary/90 transition-all flex items-center gap-2 border border-primary">
-                    <span className="material-symbols-outlined text-sm">description</span> View Reports
+                  <Link href="/export" className="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold text-xs hover:bg-primary/90 transition-all flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">download</span> Export Report
                   </Link>
-                  <Link href="/persona-insights" className="px-6 py-3 bg-secondary text-on-secondary rounded-none font-bold text-xs hover:bg-secondary/90 transition-all flex items-center gap-2 border border-secondary">
-                    <span className="material-symbols-outlined text-sm">psychology</span> Persona Insights
+                  <Link href="/demo" className="px-6 py-3 bg-secondary text-on-secondary rounded-xl font-bold text-xs hover:bg-secondary/90 transition-all flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">schedule</span> Schedule Demo
                   </Link>
                 </div>
               </div>
             </div>
 
-            {!isPro && (
+            {(!user || !user.isPro) && (
               <div className="absolute inset-0 z-20 bg-background/50 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
-                <div className="bg-white dark:bg-slate-950 p-8 md:p-10 rounded-none border border-outline-variant/80 shadow-3xl max-w-md relative overflow-hidden animate-in zoom-in-95 duration-500">
+                <div className="bg-white dark:bg-slate-950 p-8 md:p-10 rounded-[2.5rem] border border-outline-variant/80 shadow-3xl max-w-md relative overflow-hidden animate-in zoom-in-95 duration-500">
                   <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500"></div>
-                  <div className="w-14 h-14 rounded-none bg-indigo-500/10 flex items-center justify-center text-indigo-500 mx-auto mb-5 border border-indigo-500/20">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 mx-auto mb-5 border border-indigo-500/20">
                     <span className="material-symbols-outlined text-2xl">lock</span>
                   </div>
-                  <h3 className="font-headline-md text-on-surface mb-2.5 font-bold animate-pulse text-lg">Unlock Revenue Intelligence</h3>
-                  <p className="font-body-sm text-on-surface-variant mb-6 leading-relaxed text-xs font-sans">
+                  <h3 className="font-headline-md text-on-surface mb-2.5 font-bold animate-pulse">Unlock Revenue Intelligence</h3>
+                  <p className="font-body-sm text-on-surface-variant mb-6 leading-relaxed text-xs">
                     Connect your real-time conversion data and unlock detailed revenue forecasting based on AI persona behavior.
                   </p>
-                  <Link href="/checkout" className="inline-block px-8 py-3.5 bg-secondary hover:bg-secondary-container active:scale-95 text-white rounded-none font-bold text-xs uppercase tracking-wider shadow-lg border border-secondary transition-all">
-                    Upgrade to Pro ($29)
+                  <Link href="/upgrade" className="inline-block px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-indigo-500/20 transition-all">
+                    Upgrade to Pro
                   </Link>
                 </div>
               </div>

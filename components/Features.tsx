@@ -48,26 +48,26 @@ export default function Features() {
 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6 h-auto md:h-[600px]">
         {/* Psychological Mapping - Large */}
-        <div className="md:col-span-3 md:row-span-2 bg-surface-container-lowest border border-outline-variant rounded-none p-10 flex flex-col justify-between group hover:ambient-shadow transition-all overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-none blur-3xl -z-10 group-hover:scale-110 transition-transform"></div>
+        <div className="md:col-span-3 md:row-span-2 bg-surface-container-lowest border border-outline-variant rounded-[2.5rem] p-10 flex flex-col justify-between group hover:ambient-shadow transition-all overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -z-10 group-hover:scale-110 transition-transform"></div>
           <div>
             <span className="material-symbols-outlined text-blue-500 text-4xl mb-6">psychology</span>
             <h3 className="font-headline-lg text-headline-lg text-on-surface mb-4">{features[0].title}</h3>
             <p className="font-body-md text-on-surface-variant leading-relaxed max-w-sm">{features[0].desc}</p>
           </div>
-          <div className="mt-8 p-4 bg-surface-container-low rounded-none border border-outline-variant/30 flex items-center gap-4">
+          <div className="mt-8 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30 flex items-center gap-4">
             <div className="flex -space-x-2">
-              <div className="w-8 h-8 bg-blue-100 border-2 border-white"></div>
-              <div className="w-8 h-8 bg-purple-100 border-2 border-white"></div>
-              <div className="w-8 h-8 bg-emerald-100 border-2 border-white"></div>
+              <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white"></div>
+              <div className="w-8 h-8 rounded-full bg-purple-100 border-2 border-white"></div>
+              <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-white"></div>
             </div>
             <span className="text-[10px] font-label-mono text-on-surface-variant uppercase tracking-widest">Active Sentiment Analysis</span>
           </div>
         </div>
 
         {/* Swarm Simulations - Small */}
-        <div className="md:col-span-3 md:row-span-1 bg-surface-container-lowest border border-outline-variant rounded-none p-8 flex items-center gap-8 group hover:ambient-shadow transition-all relative overflow-hidden">
-           <div className="w-16 h-16 bg-purple-500/10 flex items-center justify-center text-purple-500">
+        <div className="md:col-span-3 md:row-span-1 bg-surface-container-lowest border border-outline-variant rounded-[2.5rem] p-8 flex items-center gap-8 group hover:ambient-shadow transition-all relative overflow-hidden">
+           <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500">
              <span className="material-symbols-outlined text-3xl">diversity_3</span>
            </div>
            <div>
@@ -77,14 +77,14 @@ export default function Features() {
         </div>
 
         {/* Predictive Heatmaps - Medium */}
-        <div className="md:col-span-2 md:row-span-1 bg-surface-container-lowest border border-outline-variant rounded-none p-8 group hover:ambient-shadow transition-all">
+        <div className="md:col-span-2 md:row-span-1 bg-surface-container-lowest border border-outline-variant rounded-[2.5rem] p-8 group hover:ambient-shadow transition-all">
           <span className="material-symbols-outlined text-amber-500 text-3xl mb-4">filter_center_focus</span>
           <h3 className="font-headline-md text-headline-md text-on-surface mb-2">{features[3].title}</h3>
           <p className="font-body-sm text-on-surface-variant">{features[3].desc}</p>
         </div>
 
         {/* Fix Recommendations - Small */}
-        <div className="md:col-span-1 md:row-span-1 bg-primary text-on-primary rounded-none p-8 flex flex-col justify-center items-center text-center group hover:scale-[1.02] transition-all">
+        <div className="md:col-span-1 md:row-span-1 bg-primary text-on-primary rounded-[2.5rem] p-8 flex flex-col justify-center items-center text-center group hover:scale-[1.02] transition-all">
            <span className="material-symbols-outlined text-4xl mb-4">auto_fix_high</span>
            <h3 className="font-label-mono text-[10px] uppercase tracking-widest font-bold">Fix Engine</h3>
         </div>
