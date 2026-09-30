@@ -16,6 +16,12 @@ interface WebhookTestState {
   url?: string;
   lastTested?: string;
   status?: string;
+  statusCode?: number;
+  statusText?: string;
+  responseTimeMs?: number;
+  errorMessage?: string | null;
+  isSimulated?: boolean;
+  signature?: string;
   payload?: any;
 }
 
@@ -31,7 +37,15 @@ export default function IntegrationsPage() {
   const [integrationStates, setIntegrationStates] = useState<AllIntegrations>({});
   const [webhookTest, setWebhookTest] = useState<WebhookTestState>({});
   const [webhookUrlInput, setWebhookUrlInput] = useState('');
+  const [webhookError, setWebhookError] = useState<string | null>(null);
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+  
+  const [apiKey, setApiKey] = useState<string>('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
+  const [copiedApiKey, setCopiedApiKey] = useState(false);
+  const [copiedJson, setCopiedJson] = useState(false);
+
   const [isFetching, setIsFetching] = useState(true);
   const [loadingIntegration, setLoadingIntegration] = useState<string | null>(null);
 
@@ -65,8 +79,9 @@ export default function IntegrationsPage() {
       const res = await fetch(`/api/integrations?email=${encodeURIComponent(user!.email)}`);
       if (res.ok) {
         const data = await res.json();
-        const { __webhookTest, ...states } = data;
+        const { __webhookTest, apiKey: storedKey, ...states } = data;
         setIntegrationStates(states);
+        if (storedKey) setApiKey(storedKey);
         if (__webhookTest) {
           setWebhookTest(__webhookTest);
           if (__webhookTest.url) setWebhookUrlInput(__webhookTest.url);
@@ -77,6 +92,36 @@ export default function IntegrationsPage() {
     } finally {
       setIsFetching(false);
     }
+  };
+
+  const handleGenerateApiKey = async () => {
+    if (!user?.email) return;
+    setIsGeneratingKey(true);
+    try {
+      const res = await fetch('/api/integrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          action: 'generate_api_key'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.apiKey) setApiKey(data.apiKey);
+      }
+    } catch (err) {
+      console.error('Failed to generate key', err);
+    } finally {
+      setIsGeneratingKey(false);
+    }
+  };
+
+  const copyApiKey = () => {
+    if (!apiKey) return;
+    navigator.clipboard.writeText(apiKey);
+    setCopiedApiKey(true);
+    setTimeout(() => setCopiedApiKey(false), 2000);
   };
 
   const toggleConnection = async (integrationName: string, currentlyConnected: boolean) => {
@@ -105,7 +150,6 @@ export default function IntegrationsPage() {
       });
       
       if (!res.ok) {
-        // Revert on failure
         fetchIntegrations();
       }
     } catch (error) {
@@ -117,8 +161,9 @@ export default function IntegrationsPage() {
   };
 
   const handleTestWebhook = async () => {
-    if (!user?.email || !webhookUrlInput) return;
+    if (!user?.email || !webhookUrlInput.trim()) return;
     setIsTestingWebhook(true);
+    setWebhookError(null);
 
     try {
       const res = await fetch('/api/integrations', {
@@ -126,21 +171,35 @@ export default function IntegrationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: user.email,
-          webhookTestUrl: webhookUrlInput
+          webhookTestUrl: webhookUrlInput.trim()
         })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.data && data.data.__webhookTest) {
-          setWebhookTest(data.data.__webhookTest);
+      const data = await res.json();
+      if (!res.ok) {
+        setWebhookError(data.error || 'Webhook verification failed.');
+        return;
+      }
+
+      if (data.data && data.data.__webhookTest) {
+        setWebhookTest(data.data.__webhookTest);
+        if (data.data.__webhookTest.url) {
+          setWebhookUrlInput(data.data.__webhookTest.url);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to test webhook", error);
+      setWebhookError(error.message || 'Failed to send HTTP test request.');
     } finally {
       setIsTestingWebhook(false);
     }
+  };
+
+  const copyPayloadJson = () => {
+    if (!webhookTest.payload) return;
+    navigator.clipboard.writeText(JSON.stringify(webhookTest.payload, null, 2));
+    setCopiedJson(true);
+    setTimeout(() => setCopiedJson(false), 2000);
   };
 
   const integrations = baseIntegrations.map(int => {
@@ -307,93 +366,219 @@ export default function IntegrationsPage() {
             </div>
           </div>
 
-          {/* Webhook Section */}
+          {/* REST API & Webhooks Section */}
           <section className="mt-8 md:mt-xl p-6 md:p-xl rounded-[2rem] md:rounded-[3rem] bg-surface-container-high border border-outline-variant relative overflow-hidden">
             <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-primary/5 rounded-full blur-[100px]"></div>
             
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 md:gap-xl relative z-10">
-              <div className="lg:col-span-2 flex flex-col justify-center">
-                <h2 className="font-headline-lg text-display-sm text-primary mb-4">REST API & Webhooks</h2>
-                <p className="font-body-md text-on-surface-variant mb-lg leading-relaxed">
-                  Directly ingest swarm behavior data into your internal analytics tools. Configure a webhook URL to receive real-time events.
-                </p>
-                <div className="flex flex-col gap-4 mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-                      <span className="material-symbols-outlined text-sm">key</span>
-                    </div>
-                    <span className="text-sm font-bold text-on-surface">Secure API Authentication</span>
+              <div className="lg:col-span-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-secondary font-label-mono text-label-mono uppercase tracking-widest mb-2">
+                    <span className="material-symbols-outlined text-[16px]">api</span>
+                    Developer Portal
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-                      <span className="material-symbols-outlined text-sm">notifications_active</span>
+                  <h2 className="font-headline-lg text-display-sm text-primary mb-3">REST API & Webhooks</h2>
+                  <p className="font-body-md text-on-surface-variant mb-6 leading-relaxed">
+                    Directly ingest swarm behavior data into your internal analytics tools. Configure a webhook URL to receive real-time events.
+                  </p>
+
+                  <div className="flex flex-col gap-4 mb-6 bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary shrink-0 mt-0.5">
+                        <span className="material-symbols-outlined text-sm">key</span>
+                      </div>
+                      <div className="flex-grow">
+                        <span className="text-sm font-bold text-on-surface block">Secure API Authentication</span>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <input 
+                            type={showApiKey ? "text" : "password"} 
+                            readOnly 
+                            value={apiKey || 'hz_live_loading...'} 
+                            className="text-xs font-label-mono px-3 py-1.5 bg-surface-container-high border border-outline-variant rounded-lg flex-grow text-on-surface"
+                          />
+                          <button 
+                            onClick={() => setShowApiKey(!showApiKey)} 
+                            title={showApiKey ? "Hide Key" : "Reveal Key"}
+                            className="p-1.5 rounded-lg border border-outline-variant bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors text-xs"
+                          >
+                            <span className="material-symbols-outlined text-base">
+                              {showApiKey ? "visibility_off" : "visibility"}
+                            </span>
+                          </button>
+                          <button 
+                            onClick={copyApiKey} 
+                            title="Copy API Key"
+                            className="p-1.5 rounded-lg border border-outline-variant bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors text-xs font-bold flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-base">
+                              {copiedApiKey ? "check" : "content_copy"}
+                            </span>
+                          </button>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-[10px] text-outline font-label-mono">Passed in X-Horizons-Signature header</span>
+                          <button 
+                            onClick={handleGenerateApiKey}
+                            disabled={isGeneratingKey}
+                            className="text-[10px] text-secondary hover:underline font-bold disabled:opacity-50"
+                          >
+                            {isGeneratingKey ? "Regenerating..." : "Roll secret key"}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-sm font-bold text-on-surface">Real-time Webhook Events</span>
+
+                    <div className="flex items-start gap-3 pt-3 border-t border-outline-variant/40">
+                      <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary shrink-0 mt-0.5">
+                        <span className="material-symbols-outlined text-sm">notifications_active</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-on-surface block">Real-time Webhook Events</span>
+                        <p className="text-xs text-on-surface-variant mt-0.5">
+                          Payloads include conversion leaks, persona sentiment scores, and revenue impact alerts.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col gap-3">
-                  <label className="text-sm font-bold text-on-surface">Test Webhook URL</label>
+                  <label className="text-sm font-bold text-on-surface flex items-center justify-between">
+                    <span>Test Webhook URL</span>
+                    <span className="text-[10px] font-normal text-on-surface-variant">HTTP POST</span>
+                  </label>
+                  
+                  {webhookError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-600 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm shrink-0">error</span>
+                      <span>{webhookError}</span>
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     <input 
                       type="url"
                       placeholder="https://your-domain.com/webhook"
-                      className="flex-grow px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm focus:outline-none focus:border-primary transition-colors"
+                      className="flex-grow px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm focus:outline-none focus:border-primary transition-colors"
                       value={webhookUrlInput}
-                      onChange={(e) => setWebhookUrlInput(e.target.value)}
+                      onChange={(e) => {
+                        setWebhookUrlInput(e.target.value);
+                        setWebhookError(null);
+                      }}
                     />
                     <button 
                       onClick={handleTestWebhook}
-                      disabled={isTestingWebhook || !webhookUrlInput}
-                      className="px-4 py-2 bg-primary text-on-primary rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 active:scale-95 flex items-center gap-2"
+                      disabled={isTestingWebhook || !webhookUrlInput.trim()}
+                      className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 active:scale-95 flex items-center gap-2 shadow-md"
                     >
-                      {isTestingWebhook ? 'Testing...' : 'Test'}
-                      {!isTestingWebhook && <span className="material-symbols-outlined text-sm">send</span>}
+                      {isTestingWebhook ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                          <span>Testing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Test</span>
+                          <span className="material-symbols-outlined text-sm">send</span>
+                        </>
+                      )}
                     </button>
                   </div>
+                  <p className="text-[11px] text-outline">
+                    Tip: You can use placeholder URLs like <code className="bg-surface-container-low px-1 rounded">https://your-domain.com/webhook</code> or a live target endpoint.
+                  </p>
                 </div>
               </div>
 
-              <div className="lg:col-span-3 bg-slate-950 rounded-2xl p-6 font-label-mono text-xs overflow-hidden shadow-2xl border border-slate-800 flex flex-col">
+              {/* Webhook Response Console */}
+              <div className="lg:col-span-3 bg-slate-950 rounded-2xl p-6 font-label-mono text-xs overflow-hidden shadow-2xl border border-slate-800 flex flex-col min-h-[420px]">
                 <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-4">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/30"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500/30"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/30"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
+                    </div>
+                    <span className="text-slate-400 text-[11px] ml-2 font-bold tracking-wide">Webhook Diagnostic Console</span>
                   </div>
-                  <span className="text-slate-500 text-[9px] uppercase tracking-widest font-black">webhook payload test</span>
+                  
+                  {webhookTest.status && (
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        webhookTest.status === 'success' 
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                      }`}>
+                        {webhookTest.statusCode ? `${webhookTest.statusCode} ${webhookTest.statusText || ''}` : webhookTest.status}
+                      </span>
+                      {webhookTest.responseTimeMs !== undefined && (
+                        <span className="px-2 py-1 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold">
+                          ⚡ {webhookTest.responseTimeMs} ms
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex-grow flex flex-col">
                   {webhookTest.payload ? (
                     <>
-                      <div className="mb-4">
-                        <span className={`inline-block px-2 py-1 rounded text-[10px] font-bold ${webhookTest.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                          {webhookTest.status === 'success' ? '202 Accepted' : 'Error'}
-                        </span>
-                        <span className="text-slate-500 ml-2 text-[10px]">
-                          Tested: {new Date(webhookTest.lastTested!).toLocaleString()}
-                        </span>
+                      <div className="mb-3 text-[11px] text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
+                        <div>
+                          <span className="text-slate-600">URL:</span> <span className="text-slate-300 underline">{webhookTest.url}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-600">Tested:</span> <span className="text-slate-300">{new Date(webhookTest.lastTested!).toLocaleTimeString()}</span>
+                        </div>
+                        {webhookTest.isSimulated && (
+                          <div className="text-amber-400 font-semibold">
+                            (Simulated Verification)
+                          </div>
+                        )}
                       </div>
-                      <code className="text-green-400 block whitespace-pre overflow-x-auto flex-grow">
+
+                      {webhookTest.errorMessage && (
+                        <div className="mb-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-400 text-xs">
+                          ⚠️ {webhookTest.errorMessage}
+                        </div>
+                      )}
+
+                      {webhookTest.signature && (
+                        <div className="mb-3 p-2 bg-slate-900 border border-slate-800 rounded text-[10px] text-slate-400 overflow-x-auto flex items-center justify-between">
+                          <span className="text-slate-500">Header [X-Horizons-Signature]:</span>
+                          <code className="text-secondary ml-2">{webhookTest.signature}</code>
+                        </div>
+                      )}
+
+                      <div className="text-slate-500 text-[10px] uppercase tracking-wider mb-1 font-bold">Sample Payload Sent:</div>
+                      <pre className="text-emerald-400 bg-slate-900/80 p-4 rounded-xl border border-slate-800 block whitespace-pre overflow-x-auto flex-grow text-[11px] leading-relaxed">
                         {JSON.stringify(webhookTest.payload, null, 2)}
-                      </code>
+                      </pre>
                     </>
                   ) : (
-                    <div className="flex-grow flex items-center justify-center text-slate-500">
-                      Enter a URL and click Test to see a sample webhook payload.
+                    <div className="flex-grow flex flex-col items-center justify-center text-slate-500 py-12 text-center">
+                      <span className="material-symbols-outlined text-4xl mb-2 text-slate-700">send_time_extension</span>
+                      <p className="text-sm font-semibold text-slate-400">No Webhook Event Sent Yet</p>
+                      <p className="text-xs text-slate-600 max-w-sm mt-1">
+                        Enter your webhook URL on the left and click <span className="text-slate-400 font-bold">Test</span> to dispatch a real HTTP POST request and inspect response diagnostics.
+                      </p>
                     </div>
                   )}
                 </div>
 
                 {webhookTest.payload && (
-                  <div className="mt-4 pt-4 border-t border-slate-800 flex justify-end">
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
+                    <span className="text-slate-500 text-[10px]">
+                      {webhookTest.status === 'success' ? '✓ Request completed successfully' : '✖ Endpoint verification failed'}
+                    </span>
                     <button 
-                      onClick={() => navigator.clipboard.writeText(JSON.stringify(webhookTest.payload, null, 2))}
-                      className="text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+                      onClick={copyPayloadJson}
+                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-700 transition-colors flex items-center gap-1.5 font-bold"
                     >
-                      <span className="material-symbols-outlined text-sm">content_copy</span>
-                      Copy JSON
+                      <span className="material-symbols-outlined text-sm">
+                        {copiedJson ? 'check' : 'content_copy'}
+                      </span>
+                      {copiedJson ? 'Copied!' : 'Copy JSON'}
                     </button>
                   </div>
                 )}
@@ -407,3 +592,4 @@ export default function IntegrationsPage() {
     </div>
   );
 }
+
