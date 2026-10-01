@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -8,11 +9,33 @@ import { useAuth } from '@/lib/AuthContext';
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  const [scanDomain, setScanDomain] = useState('');
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [isSubmittingScan, setIsSubmittingScan] = useState(false);
+
   const [logs, setLogs] = useState<string[]>([
     '> Initializing Swarm Protocol v4.2.0...',
     '> Loading Persona Profiles: [Skeptical, Detail, Impulse]',
     '> Connection established with data layer...',
   ]);
+
+  const handleDashboardScan = (e: React.FormEvent) => {
+    e.preventDefault();
+    setScanError(null);
+    if (!scanDomain.trim()) {
+      setScanError('Please enter a website URL to audit.');
+      return;
+    }
+    const domainRegex = /^(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+.*$/;
+    if (!domainRegex.test(scanDomain.trim())) {
+      setScanError('Please enter a valid website domain (e.g., mysite.com).');
+      return;
+    }
+    setIsSubmittingScan(true);
+    router.push(`/progress?url=${encodeURIComponent(scanDomain.trim())}`);
+  };
 
   // Simulation for live logs
   useEffect(() => {
@@ -144,6 +167,64 @@ export default function Dashboard() {
           <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
           <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
           <div className="absolute bottom-0 right-10 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+          {/* Free Audit Quick Scan Banner */}
+          <section className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden text-white">
+            <div className="absolute right-0 top-0 w-80 h-80 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2 text-emerald-400 font-label-mono text-[10px] uppercase tracking-widest font-bold mb-1">
+                  <span className="material-symbols-outlined text-sm">radar</span>
+                  Run Free Website Audit
+                </div>
+                <h2 className="font-display-md text-2xl font-bold text-white tracking-tight">Scan Any Website for Conversion Leaks</h2>
+                <p className="text-slate-300 text-xs mt-1">
+                  Enter your domain below to deploy our 4 synthetic AI personas in real-time and generate a complete behavioral audit.
+                </p>
+              </div>
+
+              <form onSubmit={handleDashboardScan} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                <div className="relative flex-grow sm:w-72">
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none">
+                    language
+                  </span>
+                  <input 
+                    type="text"
+                    placeholder="Enter website (e.g. mysite.com)"
+                    value={scanDomain}
+                    onChange={(e) => {
+                      setScanDomain(e.target.value);
+                      setScanError(null);
+                    }}
+                    className="w-full pl-10 pr-3 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-xs focus:outline-none focus:border-emerald-400 transition-colors shadow-inner"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isSubmittingScan}
+                  className="px-6 py-3 bg-secondary text-on-secondary rounded-xl font-bold text-xs hover:bg-secondary/90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
+                >
+                  {isSubmittingScan ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                      Scanning...
+                    </>
+                  ) : (
+                    <>
+                      Run Free Audit
+                      <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+            {scanError && (
+              <p className="mt-3 text-xs text-rose-400 flex items-center gap-1 font-medium relative z-10">
+                <span className="material-symbols-outlined text-sm">error</span>
+                {scanError}
+              </p>
+            )}
+          </section>
 
           {/* Header Metrics */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
