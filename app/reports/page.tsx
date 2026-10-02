@@ -1,18 +1,88 @@
 'use client';
+
+import { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import Sidebar from '@/components/Sidebar';
 
+interface ReportItem {
+  id: string;
+  date: string;
+  site: string;
+  score: number;
+  status: 'Critical Leaks' | 'High Friction' | 'Optimized';
+  type: string;
+  leaksCount: number;
+  revenueLoss: string;
+}
+
 export default function Reports() {
   const { user } = useAuth();
+  const router = useRouter();
 
-  const recentReports = [
-    { id: "REP-2024-001", date: "Oct 24, 2024", site: "nexusdata.io", score: 72, status: "Critical Issues", type: "Full behavioral audit" },
-    { id: "REP-2024-002", date: "Oct 22, 2024", site: "nexusdata.io/pricing", score: 84, status: "Optimized", type: "Funnel leak analysis" },
-    { id: "REP-2024-003", date: "Oct 15, 2024", site: "nexusdata.io/blog", score: 61, status: "High Friction", type: "Trust signal audit" }
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<'All' | 'Critical' | 'Optimized'>('All');
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+  const [newScanUrl, setNewScanUrl] = useState('');
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  const initialReports: ReportItem[] = [
+    { id: "REP-2026-001", date: "Oct 2, 2026", site: "nexusdata.io", score: 72, status: "Critical Leaks", type: "Full Behavioral Audit", leaksCount: 8, revenueLoss: "7-12%" },
+    { id: "REP-2026-002", date: "Sep 28, 2026", site: "nexusdata.io/pricing", score: 84, status: "Optimized", type: "Funnel Leak Analysis", leaksCount: 2, revenueLoss: "1-3%" },
+    { id: "REP-2026-003", date: "Sep 25, 2026", site: "nexusdata.io/checkout", score: 58, status: "Critical Leaks", type: "Checkout Friction Audit", leaksCount: 11, revenueLoss: "18-25%" },
+    { id: "REP-2026-004", date: "Sep 18, 2026", site: "saasflow.com", score: 61, status: "High Friction", type: "Trust Signal Audit", leaksCount: 6, revenueLoss: "12-18%" },
+    { id: "REP-2026-005", date: "Sep 12, 2026", site: "acmeapp.co", score: 89, status: "Optimized", type: "Enterprise Security Audit", leaksCount: 1, revenueLoss: "1-3%" },
+    { id: "REP-2026-006", date: "Sep 04, 2026", site: "getconvert.io", score: 66, status: "High Friction", type: "Persona Saccade Mapping", leaksCount: 5, revenueLoss: "7-12%" },
   ];
+
+  const [reportsList] = useState<ReportItem[]>(initialReports);
+
+  // Filtered reports calculation
+  const filteredReports = useMemo(() => {
+    return reportsList.filter((item) => {
+      const matchesSearch = 
+        item.site.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.type.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesCategory = 
+        selectedCategory === 'All' ||
+        (selectedCategory === 'Critical' && item.status === 'Critical Leaks') ||
+        (selectedCategory === 'Optimized' && item.status === 'Optimized');
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [reportsList, searchQuery, selectedCategory]);
+
+  // Aggregated Stats
+  const stats = useMemo(() => {
+    const total = reportsList.length;
+    const avgScore = Math.round(reportsList.reduce((acc, r) => acc + r.score, 0) / total);
+    const criticalLeaks = reportsList.reduce((acc, r) => acc + r.leaksCount, 0);
+    const resolvedCount = 42;
+
+    return { total, avgScore, criticalLeaks, resolvedCount };
+  }, [reportsList]);
+
+  const handleStartScanFromModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    setScanError(null);
+    if (!newScanUrl.trim()) {
+      setScanError('Please enter a website domain.');
+      return;
+    }
+    const domainRegex = /^(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+.*$/;
+    if (!domainRegex.test(newScanUrl.trim())) {
+      setScanError('Please enter a valid URL (e.g., mysite.com).');
+      return;
+    }
+
+    setIsGenerateModalOpen(false);
+    router.push(`/progress?url=${encodeURIComponent(newScanUrl.trim())}`);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background antialiased selection:bg-secondary selection:text-on-secondary">
@@ -26,135 +96,283 @@ export default function Reports() {
             <div>
               <div className="flex items-center gap-2 text-secondary font-label-mono text-label-mono uppercase tracking-widest mb-2">
                 <span className="material-symbols-outlined text-[18px]">assessment</span>
-                Analysis
+                Analysis Workspace
               </div>
               <h1 className="font-display-xl text-display-xl text-primary tracking-tight">
                 Automated Reports
               </h1>
               <p className="font-body-md text-on-surface-variant max-w-2xl mt-2 leading-relaxed">
-                Historical performance data and detailed behavioral analysis generated by your AI swarm.
+                Historical performance data and detailed behavioral analysis generated by your AI persona swarm.
               </p>
             </div>
-            <button className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 shadow-lg transition-all active:scale-95">
-              <span className="material-symbols-outlined">add</span>
+            
+            <button 
+              onClick={() => setIsGenerateModalOpen(true)}
+              className="bg-primary text-on-primary px-6 py-3.5 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 shadow-lg transition-all active:scale-95 whitespace-nowrap"
+            >
+              <span className="material-symbols-outlined text-lg">add_circle</span>
               Generate New Report
             </button>
           </header>
 
           {/* Report Stats */}
-          <section className="grid grid-cols-1 md:grid-cols-4 gap-md">
+          <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-md">
             {[
-              { label: "Total Reports", value: "156", icon: "summarize", color: "text-primary" },
-              { label: "Avg. Score", value: "74%", icon: "speed", color: "text-secondary" },
-              { label: "Critical Leaks", value: "12", icon: "warning", color: "text-error" },
-              { label: "Resolved", value: "89", icon: "check_circle", color: "text-tertiary-fixed-dim" }
+              { label: "Total Reports", value: `${stats.total}`, icon: "summarize", color: "text-primary" },
+              { label: "Avg. Score", value: `${stats.avgScore}/100`, icon: "speed", color: "text-secondary" },
+              { label: "Critical Leaks", value: `${stats.criticalLeaks}`, icon: "warning", color: "text-error" },
+              { label: "Issues Resolved", value: `${stats.resolvedCount}`, icon: "check_circle", color: "text-emerald-600 dark:text-emerald-400" }
             ].map((stat, i) => (
-              <div key={i} className="bg-surface-container-lowest border border-outline-variant p-md rounded-2xl shadow-sm flex flex-col gap-2">
+              <div key={i} className="bg-surface-container-lowest border border-outline-variant p-md rounded-2xl shadow-sm flex flex-col justify-between gap-2 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
-                  <span className="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-wider">{stat.label}</span>
-                  <span className={`material-symbols-outlined ${stat.color}`}>{stat.icon}</span>
+                  <span className="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">{stat.label}</span>
+                  <span className={`material-symbols-outlined text-xl ${stat.color}`}>{stat.icon}</span>
                 </div>
-                <div className={`font-headline-lg text-headline-lg ${stat.color}`}>{stat.value}</div>
+                <div className={`font-headline-lg text-2xl font-extrabold ${stat.color}`}>{stat.value}</div>
               </div>
             ))}
           </section>
 
           <div className="relative">
             {(!user || !user.isPro) && (
-              <div className="absolute inset-0 z-20 bg-background/40 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center rounded-2xl">
-                <div className="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant shadow-2xl max-w-md">
-                  <span className="material-symbols-outlined text-4xl text-secondary mb-4">lock</span>
-                  <h3 className="font-headline-md text-primary mb-2">Historical Reports Locked</h3>
-                  <p className="font-body-sm text-on-surface-variant mb-6">
+              <div className="absolute inset-0 z-20 bg-background/50 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center rounded-3xl">
+                <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant shadow-2xl max-w-md relative overflow-hidden">
+                  <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mx-auto mb-4 border border-secondary/20">
+                    <span className="material-symbols-outlined text-2xl">lock</span>
+                  </div>
+                  <h3 className="font-headline-md text-xl text-primary font-bold mb-2">Historical Archives Locked</h3>
+                  <p className="font-body-sm text-on-surface-variant text-xs mb-6 leading-relaxed">
                     {!user 
-                      ? "Create a free account or sign in to access your full history of automated swarm reports." 
-                      : "Upgrade to the Pro plan to access your full history of automated swarm reports."}
+                      ? "Sign in or create an account to access complete historical report archives and full leak diagnostic exports." 
+                      : "Upgrade to Precision Pro to access your complete archive of automated behavioral reports and download PDF summaries."}
                   </p>
-                  <div className="flex gap-4 justify-center">
+                  <div className="flex gap-3 justify-center">
                     {!user ? (
                       <>
-                        <Link href="/login" className="px-6 py-2 border border-outline-variant rounded-xl font-bold text-sm hover:bg-surface-container-low transition-colors">Sign In</Link>
-                        <Link href="/register" className="px-6 py-2 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">Get Started</Link>
+                        <Link href="/login" className="px-5 py-2.5 border border-outline-variant rounded-xl font-bold text-xs hover:bg-surface-container-low transition-colors">Sign In</Link>
+                        <Link href="/register" className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 transition-opacity">Get Started</Link>
                       </>
                     ) : (
-                      <Link href="/upgrade" className="px-6 py-2 bg-secondary text-on-secondary rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">Upgrade to Pro</Link>
+                      <Link href="/upgrade" className="px-6 py-2.5 bg-secondary text-on-secondary rounded-xl font-bold text-xs hover:opacity-90 transition-opacity">Upgrade to Pro</Link>
                     )}
                   </div>
                 </div>
               </div>
             )}
 
-            
-            {/* Reports Table */}
-            <section className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xl overflow-hidden">
-              <div className="p-md bg-surface-container-low/30 border-b border-outline-variant flex items-center justify-between">
-                <h2 className="font-headline-md text-headline-md text-on-surface">Recent Analysis</h2>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
-                  <input type="text" placeholder="Filter reports..." className="pl-10 pr-4 py-2 rounded-lg border border-outline-variant bg-white text-sm focus:outline-none focus:border-secondary transition-all" />
+            {/* Reports Table & Controls */}
+            <section className="bg-surface-container-lowest border border-outline-variant rounded-3xl shadow-xl overflow-hidden flex flex-col">
+              <div className="p-6 bg-surface-container-low/30 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-headline-md text-xl font-bold text-on-surface">Recent Analysis</h2>
+                  <p className="text-xs text-on-surface-variant mt-0.5">Filter and review behavioral audit records generated by your AI swarm</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Category Pills */}
+                  <div className="flex gap-1 p-1 bg-surface-container-low rounded-xl text-xs font-bold">
+                    {(['All', 'Critical', 'Optimized'] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-3 py-1.5 rounded-lg transition-all ${
+                          selectedCategory === cat
+                            ? 'bg-white text-primary shadow-sm'
+                            : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="relative w-full sm:w-56">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-base">search</span>
+                    <input 
+                      type="text" 
+                      placeholder="Search reports..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 rounded-xl border border-outline-variant bg-white text-xs focus:outline-none focus:border-secondary transition-all" 
+                    />
+                  </div>
                 </div>
               </div>
               
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-surface-container-low/50 border-b border-outline-variant font-label-mono text-[11px] text-on-surface-variant uppercase tracking-widest">
-                      <th className="px-lg py-md">Report ID</th>
-                      <th className="px-lg py-md">Target URL</th>
-                      <th className="px-lg py-md">Analysis Date</th>
-                      <th className="px-lg py-md">Score</th>
-                      <th className="px-lg py-md">Status</th>
-                      <th className="px-lg py-md text-right">Action</th>
+                    <tr className="bg-surface-container-low/50 border-b border-outline-variant font-label-mono text-[10px] text-on-surface-variant uppercase tracking-widest">
+                      <th className="px-6 py-4">Report ID</th>
+                      <th className="px-6 py-4">Target Website</th>
+                      <th className="px-6 py-4">Audit Type</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4">Score</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="font-body-md text-body-md text-on-surface">
-                    {recentReports.map((report, i) => (
-                      <tr key={i} className="border-b border-outline-variant/30 hover:bg-surface-container-low/20 transition-colors group">
-                        <td className="px-lg py-md font-mono text-xs">{report.id}</td>
-                        <td className="px-lg py-md font-medium text-secondary">{report.site}</td>
-                        <td className="px-lg py-md text-on-surface-variant">{report.date}</td>
-                        <td className="px-lg py-md">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full border-2 border-outline-variant flex items-center justify-center text-xs font-bold">
-                              {report.score}
+                  <tbody className="font-body-md text-xs text-on-surface">
+                    {filteredReports.length > 0 ? (
+                      filteredReports.map((report) => (
+                        <tr key={report.id} className="border-b border-outline-variant/30 hover:bg-surface-container-low/30 transition-colors group">
+                          <td className="px-6 py-4 font-mono text-[11px] font-bold text-on-surface-variant">
+                            {report.id}
+                          </td>
+                          
+                          <td className="px-6 py-4 font-medium text-secondary">
+                            <div className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-base text-secondary">language</span>
+                              <span className="font-bold hover:underline cursor-pointer" onClick={() => router.push(`/progress?url=${encodeURIComponent(report.site)}`)}>
+                                {report.site}
+                              </span>
                             </div>
-                            <div className="flex-grow w-16 bg-surface-container h-1 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full ${report.score > 80 ? 'bg-secondary' : 'bg-error'}`} style={{ width: `${report.score}%` }}></div>
+                          </td>
+
+                          <td className="px-6 py-4 text-on-surface-variant">
+                            <span className="px-2.5 py-1 bg-surface-container-high border border-outline-variant/50 rounded-lg text-[10px] font-semibold text-on-surface">
+                              {report.type}
+                            </span>
+                          </td>
+
+                          <td className="px-6 py-4 text-on-surface-variant font-label-mono text-[11px]">
+                            {report.date}
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                                report.score >= 80 
+                                  ? 'border-emerald-500 text-emerald-600 bg-emerald-50' 
+                                  : report.score >= 65 
+                                    ? 'border-amber-500 text-amber-600 bg-amber-50' 
+                                    : 'border-rose-500 text-rose-600 bg-rose-50'
+                              }`}>
+                                {report.score}
+                              </div>
+                              <div className="flex-grow w-16 bg-surface-container h-1.5 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full ${
+                                    report.score >= 80 ? 'bg-emerald-500' : report.score >= 65 ? 'bg-amber-500' : 'bg-rose-500'
+                                  }`} 
+                                  style={{ width: `${report.score}%` }}
+                                ></div>
+                              </div>
                             </div>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                              report.status === 'Optimized' 
+                                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
+                                : report.status === 'High Friction'
+                                  ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                  : 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                            }`}>
+                              {report.status}
+                            </span>
+                          </td>
+
+                          <td className="px-6 py-4 text-right">
+                            <button 
+                              onClick={() => router.push(`/progress?url=${encodeURIComponent(report.site)}`)}
+                              className="px-3 py-1.5 bg-surface-container-high hover:bg-secondary hover:text-on-secondary border border-outline-variant text-on-surface font-bold text-xs rounded-xl transition-all inline-flex items-center gap-1 group/btn shadow-xs"
+                            >
+                              <span>View</span>
+                              <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-0.5 transition-transform">open_in_new</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center text-on-surface-variant">
+                          <div className="flex flex-col items-center gap-2">
+                            <span className="material-symbols-outlined text-3xl text-outline">search_off</span>
+                            <p className="font-bold text-sm">No analysis reports match your filter query</p>
+                            <p className="text-xs text-outline">Try searching for a different domain or reset your category filter.</p>
                           </div>
                         </td>
-                        <td className="px-lg py-md">
-                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border ${
-                            report.status === 'Optimized' ? 'bg-secondary/10 text-secondary border-secondary/20' : 'bg-error/10 text-error border-error/20'
-                          }`}>
-                            {report.status}
-                          </span>
-                        </td>
-                        <td className="px-lg py-md text-right">
-                          <button className="text-secondary hover:text-primary transition-colors flex items-center gap-1 ml-auto font-semibold">
-                            View <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">chevron_right</span>
-                          </button>
-                        </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
             </section>
-
-            {/* Empty State Mock */}
-            <div className="p-xl text-center flex flex-col items-center gap-md border-2 border-dashed border-outline-variant rounded-2xl opacity-60 mt-xl">
-              <span className="material-symbols-outlined text-5xl text-outline-variant">folder_open</span>
-              <div className="max-w-sm">
-                <h3 className="font-headline-md text-on-surface mb-xs">No archived reports</h3>
-                <p className="font-body-sm text-on-surface-variant">Your older reports are being processed and will appear here shortly.</p>
-              </div>
-            </div>
           </div>
         </div>
       </main>
+
+      {/* Generate New Report Modal */}
+      {isGenerateModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative animate-fade-in-up">
+            <button 
+              onClick={() => setIsGenerateModalOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-surface-container-low text-on-surface-variant transition-colors"
+            >
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+                <span className="material-symbols-outlined text-xl">radar</span>
+              </div>
+              <div>
+                <h3 className="font-headline-sm text-lg font-bold text-primary">Generate New Behavioral Report</h3>
+                <p className="text-xs text-on-surface-variant">Deploy your AI persona swarm to audit any domain</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleStartScanFromModal} className="flex flex-col gap-4 mt-6">
+              <div>
+                <label className="text-xs font-bold text-on-surface block mb-1.5">Website Domain URL</label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-base">language</span>
+                  <input 
+                    type="text"
+                    placeholder="e.g. mysite.com or company.com/pricing"
+                    value={newScanUrl}
+                    onChange={(e) => {
+                      setNewScanUrl(e.target.value);
+                      setScanError(null);
+                    }}
+                    autoFocus
+                    className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:outline-none focus:border-secondary transition-colors"
+                  />
+                </div>
+                {scanError && (
+                  <p className="mt-2 text-xs text-rose-500 font-medium flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">error</span>
+                    {scanError}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3 justify-end mt-4">
+                <button 
+                  type="button" 
+                  onClick={() => setIsGenerateModalOpen(false)}
+                  className="px-5 py-2.5 border border-outline-variant rounded-xl font-bold text-xs text-on-surface-variant hover:bg-surface-container-low transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-6 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex items-center gap-2 shadow-md"
+                >
+                  <span>Start Audit</span>
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
   );
 }
+
